@@ -1,58 +1,108 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from "react";
 
 function Seats() {
-    const seatRows = 10;
-    const seatsPerRow = 12;
-    const Bookinseat = [];
+  const seatRows = 10;
+  const seatsPerRow = 12;
 
-    const [first, setfirst] = useState([])
-    const [disabledSeats, setDisabledSeats] = useState([]);
+  const [selectedSeats, setSelectedSeats] = useState([]);
+  const [bookedSeats, setBookedSeats] = useState(
+    localStorage.getItem("bookedSeats")
+      ? JSON.parse(localStorage.getItem("bookedSeats"))
+      : []
+  );
+  const [justBooked, setJustBooked] = useState([]);
 
-    // console.log(typeof first,"type of the first")
-    const getSeat = (SeatValue) => {
-        // Bookinseat.push(SeatValue)
-        // console.log(Bookinseat, "Bookinseat")
-        if (first.includes(SeatValue)) {
-            alert(`Seat ${SeatValue} is already selected.`);
-            return;
-        }
-        setfirst([...first, SeatValue])
-            if (first.length == 5) { alert('only 5 seats are ti book per user') }
-
-
+  // Handle user clicking seat
+  const getSeat = (seatValue) => {
+    if (bookedSeats.includes(seatValue)) {
+      alert(`Seat ${seatValue} is already booked.`);
+      return;
     }
 
-    const Book = () => {
-
-        alert(`You have booked seats: ${first.join(", ")}`);
-        setDisabledSeats(first)
+    if (selectedSeats.includes(seatValue)) {
+      alert(`Seat ${seatValue} already selected.`);
+      return;
     }
-    // (5) ['A01', 'A11', 'A31', 'A21', 'A41']
-    console.log(disabledSeats, 'disabledSeats')
-    return (
-        <>
-            <div>
-                <h1 className='text-3xl font-bold underline text-center mt-10'>Seat Booking Application</h1>
-                <h1> Seats Booking :{first.join(",")}</h1>
-                <h1> Total  Booking :{first.length}</h1>
-                <h3>{first.length == 5 ? "Only 5 seats" : ''}</h3>
-                {disabledSeats.length > 0 && <h2 className='text-green-500'>You have successfully booked seats: {disabledSeats.join(", ")}</h2>}
-               {first.length>=1? <button className='bg-amber-200 text-black p-2 cursor-pointer text-2xl' onClick={Book}>Book</button>:""}
-                <div className={`grid grid-rows-10 grid-cols-12 gap-4 p-10 justify-cente `}>
-                    {Array.from({ length: seatRows }).map((_, rowIndex) => (
-                        Array.from({ length: seatsPerRow }).map((_, seatIndex) => (
-                            <button key={`${rowIndex}-${seatIndex}`}>
-                                <button disabled={first.length == 5} onClick={() => getSeat(String.fromCharCode(65 + rowIndex) + seatIndex + 1)}
-                                >{String.fromCharCode(65 + rowIndex)}{seatIndex + 1} </button>
-                            </button>
-                        ))
-                    ))}
-                </div>
-            </div>
 
-        </>
-    )
+    if (selectedSeats.length === 5) {
+      alert("Only 5 seats can be booked per user.");
+      return;
+    }
+
+    setSelectedSeats([...selectedSeats, seatValue]);
+  };
+
+  // Book all seats
+  const bookNow = () => {
+    alert(`You booked: ${selectedSeats.join(", ")}`);
+
+    const updated = [...bookedSeats, ...selectedSeats];
+
+    localStorage.setItem("bookedSeats", JSON.stringify(updated));
+    setBookedSeats(updated);
+    setJustBooked(selectedSeats);
+
+    setSelectedSeats([]); // reset
+  };
+
+  useEffect(() => {
+    setBookedSeats(
+      localStorage.getItem("bookedSeats")
+        ? JSON.parse(localStorage.getItem("bookedSeats"))
+        : []
+    );
+  }, []);
+
+  return (
+    <div>
+      <h1 className="text-3xl font-bold text-center mt-10">Seat Booking App</h1>
+
+
+      {justBooked.length > 0 && (
+        <h2 className="text-green-500 text-xl">
+          Successfully booked: {justBooked.join(", ")}
+        </h2>
+      )}
+
+      {selectedSeats.length > 0 && (
+        <button
+          className="bg-yellow-300 p-2 mt-5 text-xl"
+          onClick={bookNow}
+        >
+          Book Now
+        </button>
+      )}
+
+      <div className="grid grid-cols-12 gap-4 p-10">
+        {Array.from({ length: seatRows }).map((_, rowIndex) =>
+          Array.from({ length: seatsPerRow }).map((_, seatIndex) => {
+            const seatId =
+              String.fromCharCode(65 + rowIndex) + (seatIndex + 1);
+console.log(seatId);
+            const isBooked = bookedSeats.includes(seatId);
+            const isSelected = selectedSeats.includes(seatId);
+            return (
+              <button
+                key={seatId}
+                disabled={isBooked}
+                onClick={() => getSeat(seatId)}
+                className={`w-12 h-12 rounded text-sm font-bold
+                ${
+                  isBooked
+                    ? "bg-red-500 cursor-not-allowed text-white"
+                    : isSelected
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-300 hover:bg-blue-500"
+                }`}
+              >
+                {seatId}
+              </button>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
 }
-// ${{String.fromCharCode(65 + rowIndex)}{seatIndex + 1}?true:false}
 
-export default Seats
+export default Seats;
